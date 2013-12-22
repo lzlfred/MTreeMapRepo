@@ -1,7 +1,8 @@
 MTreeMapRepo
 ============
 
-This project contains a M-Tree based Map written in Java
+This project contains a M-Tree based Map written in Java.  I believe it operates correctly, 
+though this code hasn't been strongly tested.
 
 A MTreeMap is a Map-like data-structure designed to efficiently support k-nearest-neighbor (kNN)
 searches, range searches, as well as regular Map style put/get operations. To support kNN
