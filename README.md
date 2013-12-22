@@ -20,7 +20,7 @@ assumptions are true:
 A MTreeMap is loosely based on the MTree introduced by Paolo Ciaccia, Marco Patella, and Pavel
 Zezula in 1997 in the paper "M-tree An Efficient Access Method for Similarity Search in Metric
 Spaces" from the Proceedings of the 23rd VLDB Conference.  The core differences are that this 
-effort is a binary tree and that does not store previously computed distance computations.  
+effort is a binary tree and that does not store previously computed distance computations. 
 Ciaccia et al's MTree saves previously computed distances to more quickly find the appropriate 
 branch of a multi-way tree to descend.  The code herein is far simplier because saving 
 previously computed distance doesn't help (and thus isn't included) when searching a binary tree.
