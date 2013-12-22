@@ -10,8 +10,11 @@ keys. The DistanceMetric should define a true Metric Space in which the followin
 assumptions are true:
 
 (1) d(x,y) >= 0
+
 (2) d(x,y) = d(y,x)
+
 (3) d(x,z) <= d(x,y) + d(y,z)
+
 (4) d(x,y) = 0 if and only if x = y  (optional)
 
 A MTreeMap is loosely based on the MTree introduced by Paolo Ciaccia, Marco Patella, and Pavel
