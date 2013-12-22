@@ -1,9 +1,13 @@
 package demo;
 
 
+import com.google.common.primitives.Doubles;
 import java.awt.geom.Point2D;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import mtree.DistanceMetric;
@@ -14,7 +18,7 @@ import mtree.Result;
 public class MTreeMapDemo {
 
 	/** How many points should we put in the data-structure?. */
-	private static final int NUM_POINTS = 300;
+	private static int NUM_POINTS = 300;
 
 	/** This DistanceMetric computes the distance between to (x,y) points. */
 	static class PointMetric implements DistanceMetric<Point2D> {
@@ -35,7 +39,7 @@ public class MTreeMapDemo {
 		loadTree(points, mTree);
 
 		System.out.println("Final Loaded Size :: " + mTree.size());
-		
+
 		examineEntries(mTree);
 
 		reloadTree(points, mTree);
@@ -44,8 +48,10 @@ public class MTreeMapDemo {
 		performRangeSearches(mTree);
 
 		unload(points, mTree);
-		
+
 		System.out.println("Final Unloaded Size :: " + mTree.size());
+
+		demonstrateRebalancing();
 	}
 
 
@@ -62,16 +68,16 @@ public class MTreeMapDemo {
 			counter++;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Look at the entries in the tree, confirm that they match the points that were just placed
 	 * inside.
 	 */
 	private static void examineEntries(MTreeMap<Point2D, Integer> mTree) {
-		
+
 		System.out.println("Examining Entries...");
-		
+
 		for (Map.Entry<Point2D, Integer> entry : mTree.entrySet()) {
 			System.out.println("  entry " + entry.getValue() + " at " + entry.getKey().toString());
 		}
@@ -79,8 +85,8 @@ public class MTreeMapDemo {
 
 
 	/**
-	 * Reload the MTreeMap with the same random points. We want the "prior value" printed to go 0, 1,
-	 * 2, ..." This indicates that the proper prior value is being evicted when the same Key is
+	 * Reload the MTreeMap with the same random points. We want the "prior value" printed to go 0,
+	 * 1, 2, ..." This indicates that the proper prior value is being evicted when the same Key is
 	 * reinserted.
 	 */
 	private static void reloadTree(Collection<Point2D> points, MTreeMap<Point2D, Integer> mTree) {
@@ -93,7 +99,7 @@ public class MTreeMapDemo {
 	}
 
 
-	/** Perform some K-Nearest-Neighbor searches.  Print the Results. */
+	/** Perform some K-Nearest-Neighbor searches. Print the Results. */
 	private static void performKNNsearches(MTreeMap<Point2D, Integer> mTree) {
 
 		Collection<Point2D> points = makePoints();
@@ -147,7 +153,7 @@ public class MTreeMapDemo {
 	}
 
 
-	private static Collection<Point2D> makePoints() {
+	private static List<Point2D> makePoints() {
 
 		Random rng = new Random(17L);
 
@@ -157,5 +163,42 @@ public class MTreeMapDemo {
 		}
 
 		return list;
+	}
+
+
+	private static void demonstrateRebalancing() {
+
+		NUM_POINTS = 30000;
+		List<Point2D> points = makePoints();
+
+		//sort all input by x-coordinate
+		Collections.sort(points, new Comparator<Point2D>() {
+			@Override
+			public int compare(Point2D t, Point2D t1) {
+				return Doubles.compare(t.getX(), t1.getX());
+			}
+		});
+
+		//build unbalanced MTreeMap...
+		MTreeMap<Point2D, Integer> mTree = new MTreeMap(new PointMetric());
+		int counter = 0;
+		for (Point2D point : points) {
+			mTree.put(point, counter);
+			counter++;
+		}
+
+		System.out.println("A Big Unbalanced MTree has..");
+		System.out.println(mTree.size() + " entries");
+		System.out.println(mTree.sphereCount() + " spheres");
+
+		mTree.rebalance();
+
+		System.out.println("A Big Balanced MTree has..");
+		System.out.println(mTree.size() + " entries");
+		System.out.println(mTree.sphereCount() + " spheres");
+
+		System.out.println(
+				"\nNote how the number of spheres drops even though the number "
+				+ "of entries remains the same ");
 	}
 }
