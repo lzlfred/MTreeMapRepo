@@ -123,6 +123,7 @@ public class MTreeMap<K, V> implements Serializable {
 	}
 
 
+	/** @return - The number of entries in this Map. */
 	public int size() {
 		return this.entryCount;
 	}
@@ -144,39 +145,30 @@ public class MTreeMap<K, V> implements Serializable {
 
 
 	/** Search for an exact key match. */
-	public V get(K key) {
+	public V get(K exactKey) {
 
-		if (key == null) {
+		if (exactKey == null) {
 			throw new IllegalArgumentException("Null Keys are not permited.");
 		}
 
-		return root.get(key);
+		return root.get(exactKey);
 	}
 
 
-	public Result<K, V> getClosest(K key) {
+	/** Perform a kNN search where k = 1. */
+	public Result<K, V> getClosest(K searchKey) {
 
-		if (key == null) {
-			throw new IllegalArgumentException("Null Keys are not permited.");
-		}
+		Collection<Result<K, V>> results = getNClosest(searchKey, 1);
 
-		//nothing to retrieve...
-		if (this.isEmpty()) {
-			return null;
-		}
-
-		Query q = new Query(key, 1, metric);
-		q.startQuery(root);
-
-		Collection<Result<K, V>> results = q.results();
 		ArrayList<Result<K, V>> list = new ArrayList<>(results);
 		return list.get(0);
 	}
 
 
-	public Collection<Result<K, V>> getNClosest(K key, int n) {
+	/** Perform a kNN search with arbitrary k. */
+	public Collection<Result<K, V>> getNClosest(K searchKey, int n) {
 
-		if (key == null) {
+		if (searchKey == null) {
 			throw new IllegalArgumentException("Null Keys are not permited.");
 		}
 
@@ -189,7 +181,7 @@ public class MTreeMap<K, V> implements Serializable {
 			return null;
 		}
 
-		Query q = new Query(key, n, metric);
+		Query q = new Query(searchKey, n, metric);
 		q.startQuery(root);
 
 		ArrayList<Result<K, V>> list = new ArrayList<>(q.results());
@@ -199,9 +191,10 @@ public class MTreeMap<K, V> implements Serializable {
 	}
 
 
-	public Collection<Result<K, V>> getAllWithinRange(K key, double range) {
+	/** @return - A Result for all keys within this range of the key. */ 
+	public Collection<Result<K, V>> getAllWithinRange(K searchKey, double range) {
 
-		if (key == null) {
+		if (searchKey == null) {
 			throw new IllegalArgumentException("Null Keys are not permited.");
 		}
 
@@ -214,7 +207,7 @@ public class MTreeMap<K, V> implements Serializable {
 			return null;
 		}
 
-		Query q = new Query(key, metric, range);
+		Query q = new Query(searchKey, metric, range);
 		q.startQuery(root);
 
 		ArrayList<Result<K, V>> list = new ArrayList<>(q.results());
@@ -224,13 +217,17 @@ public class MTreeMap<K, V> implements Serializable {
 	}
 
 
-	public V remove(K key) {
+	/**
+	 * NOTE: Removing a Key may not remove all references to that Key. This occurs if a Key was
+	 * selected as a "routing" Key.
+	 */
+	public V remove(K exactKey) {
 
-		if (key == null) {
+		if (exactKey == null) {
 			throw new IllegalArgumentException("Null Keys are not permited.");
 		}
 
-		V removed = root.remove(key);
+		V removed = root.remove(exactKey);
 
 		//if successful, reduce entry count
 		if (removed != null) {
