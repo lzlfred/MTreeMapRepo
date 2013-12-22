@@ -164,7 +164,8 @@ class Query<K, V> {
 	private double radius() {
 
 		if (type == QueryType.K_NN_QUERY) {
-			if (queue.isEmpty()) {
+			if (queue.size() < maxNumResults) {
+				//radius is still large because we haven't found "k" results yet
 				return Double.POSITIVE_INFINITY;
 			} else {
 				return queue.peek().distance; //must beat this to improve
