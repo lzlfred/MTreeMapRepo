@@ -15,6 +15,12 @@ import mtree.MTreeMap;
 import mtree.Result;
 
 
+/**
+ * A quick demo to demonstrate the MTreeMap and its usage. (This demo should not be considered a set
+ * of tests)
+ *
+ * @author Jon Parker (jon.i.parker@gmail.com)
+ */
 public class MTreeMapDemo {
 
 	/** How many points should we put in the data-structure?. */
@@ -34,23 +40,32 @@ public class MTreeMapDemo {
 
 		MTreeMap<Point2D, Integer> mTree = new MTreeMap(new PointMetric());
 
+		//draw some random points in the "unit square"
 		Collection<Point2D> points = makePoints();
 
+		//put some data in the tree..
 		loadTree(points, mTree);
 
 		System.out.println("Final Loaded Size :: " + mTree.size());
 
+		//confirm the "mapped data" equals the input 
 		examineEntries(mTree);
 
+		//reload the same data to ensure the prior values get evicted...
 		reloadTree(points, mTree);
 
+		//do some searching...
 		performKNNsearches(mTree);
 		performRangeSearches(mTree);
 
+		//unload the tree (confirm that remove(key) works)
 		unload(points, mTree);
 
 		System.out.println("Final Unloaded Size :: " + mTree.size());
 
+		//show..
+		//(1) how building a tree from an ordered dataset can be bad
+		//(2) how to fix the unbalanced tree when neccessary
 		demonstrateRebalancing();
 	}
 
@@ -168,7 +183,7 @@ public class MTreeMapDemo {
 
 	private static void demonstrateRebalancing() {
 
-		NUM_POINTS = 30000;
+		NUM_POINTS = 30000; //rebalancing is more neccessary when the dataset is big..
 		List<Point2D> points = makePoints();
 
 		//sort all input by x-coordinate
@@ -188,13 +203,13 @@ public class MTreeMapDemo {
 		}
 
 		System.out.println("A Big Unbalanced MTree has..");
-		System.out.println(mTree.size() + " entries");
+		System.out.println(mTree.size() + " entries within");
 		System.out.println(mTree.sphereCount() + " spheres");
 
 		mTree.rebalance();
 
 		System.out.println("A Big Balanced MTree has..");
-		System.out.println(mTree.size() + " entries");
+		System.out.println(mTree.size() + " entries within ");
 		System.out.println(mTree.sphereCount() + " spheres");
 
 		System.out.println(
