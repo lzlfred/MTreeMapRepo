@@ -21,9 +21,9 @@ import java.util.Set;
  * assumptions are true:
  *
  * (1) d(x,y) >= 0
- * (2) d(x,y) = 0 if and only if x = y
- * (3) d(x,y) = d(y,x)
- * (4) d(x,z) <= d(x,y) + d(y,z)
+ * (2) d(x,y) = d(y,x)
+ * (3) d(x,z) <= d(x,y) + d(y,z)
+ * (4) d(x,y) = 0 if and only if x = y (optional)
  *
  * A MTreeMap is loosely based on the MTree introduced by Paolo Ciaccia, Marco Patella, and Pavel
  * Zezula in 1997 in the paper "M-tree An Efficient Access Method for Similarity Search in Metric
@@ -36,8 +36,8 @@ import java.util.Set;
  * has a centerpoint and radius whose values are used to route put/get requests, kNN searches, and
  * range searches.
  *
- * When Keys are first added to an MTreeMap they are placed inside the SphereOfPoints. Eventually,
- * that Sphere will have too many entries and need to be split. When this occurs the SphereOfPoints
+ * When Keys are first added to an MTreeMap they are placed inside a SphereOfPoints. Eventually,
+ * that Sphere will have too many entries and needs to be split. When this occurs the SphereOfPoints
  * becomes a SphereOfSpheres that own 2 newly created SphereOfPoints. The 2 new SphereOfPoints
  * contain all the Key+Value pairs that the original "overfilled" SphereOfPoints contained. The
  * centerpoints of the 2 new SphereOfPoints are selected in order to reduce the overlapping volume
@@ -46,19 +46,20 @@ import java.util.Set;
  *
  * When Key+Value pairs are removed from a MTreeMap they are removed, however, the fact that the key
  * was present in the MTreeMap may leave a permanent imprint on the MTreeMap. This occurs when the
- * Key is selected as the centerpoint for a new SphereOfPoints. In this case the Key is still used
- * to route get/put queries even though the Key is no longer associated with a Key+Value pair. An
- * insertion + immediate (or delayed) removal a Key can also permanently reduce the query routing
- * efficency of the MTreeMap when the key insertion forced a Sphere to increase its radius (which
- * will not shrink upon key removal).
+ * Key was selected as the centerpoint for a new SphereOfPoints. In this case the Key is still used
+ * to route get/put queries even though the Key is no longer associated with a Key+Value pair. Any
+ * insertion of a Key can permanently reduce the query routing efficency of an MTreeMap. This
+ * occurs when the key insertion forces a Sphere to increase its radius (which will not shrink upon
+ * key removal).
  *
  * Importantly, MTreeMaps have no automatic balancing mechanism. Therefore inserting Key+Value pairs
  * where the Keys vary in some predictable way is likely to produce a tree that is unbalanced. In
  * principal, tree balance could be maintained by rotating the Sphere nodes similar to how AVL and
- * Red-Black trees rotate nodes to maintain balance. The makeBalancedCopy() method is provided to
- * combat tree imbalance, but this method is expensive and should be used sparingly if possible.
+ * Red-Black trees rotate nodes to maintain balance. The makeBalancedCopy() and rebalance() methods
+ * are provided to combat tree imbalance, but these method are expensive and should be used
+ * sparingly if possible.
  *
- * 
+ *
  * @author Jon Parker (jon.i.parker@gmail.com)
  *
  * @param <K> - The Keys, these keys are stored in HashMaps, so their hashcode() and equals()
@@ -278,7 +279,21 @@ public class MTreeMap<K, V> implements Serializable {
 			newMap.put(entry.getKey(), entry.getValue());
 		}
 
+		if (this.entryCount != newMap.entryCount) {
+			throw new AssertionError("The rebalancing process changed the number of entries");
+		}
+
 		return newMap;
+	}
+
+
+	/** Rebuild this MTreeMap using makeBalancedCopy(). */
+	public void rebalance() {
+
+		MTreeMap<K, V> newMap = makeBalancedCopy();
+		this.root = newMap.root;
+		this.sphereCount = newMap.sphereCount;
+		this.entryCount = newMap.entryCount;
 	}
 
 	/**
